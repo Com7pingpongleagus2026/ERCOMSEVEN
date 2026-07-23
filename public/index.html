@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🐺 Werewolf Cards</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0a0e1a;--card:#141829;--line:#252a3f;--txt:#e8eaf0;--dim:#7a8199;--cyan:#38f3f2;--gold:#f5c842;--red:#f04e4e;--green:#2ecc71;--radius:16px}
+body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:16px}
+.container{width:100%;max-width:420px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin-bottom:16px}
+h1{font-size:1.5rem;text-align:center;margin-bottom:6px}
+h2{font-size:1.1rem;margin-bottom:12px}
+.sub{color:var(--dim);text-align:center;font-size:.85rem;margin-bottom:20px}
+input{width:100%;padding:12px 16px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--txt);font-size:1rem;margin-bottom:10px;outline:none}
+input:focus{border-color:var(--cyan)}
+.btn{width:100%;padding:14px;border:none;border-radius:12px;font-size:1rem;font-weight:700;cursor:pointer;margin-bottom:8px;transition:.2s}
+.btn-primary{background:linear-gradient(135deg,var(--cyan),#1a8aff);color:#000}
+.btn-gold{background:linear-gradient(135deg,var(--gold),#f5a623);color:#000}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--txt)}
+.btn:active{transform:scale(.97)}
+.pill{display:inline-block;background:rgba(56,243,242,.12);color:var(--cyan);padding:4px 12px;border-radius:20px;font-size:.8rem;margin:3px}
+.player-list{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.room-code{font-size:2.5rem;font-weight:900;letter-spacing:8px;text-align:center;color:var(--gold);margin:16px 0}
+.role-card{text-align:center;padding:32px 20px;position:relative;overflow:hidden}
+.role-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 30%,rgba(56,243,242,.08),transparent 70%);pointer-events:none}
+.role-emoji{font-size:4rem;margin-bottom:12px}
+.role-name{font-size:1.8rem;font-weight:900;margin-bottom:4px}
+.role-th{font-size:1.1rem;color:var(--cyan);margin-bottom:16px}
+.role-desc{color:var(--dim);font-size:.9rem;line-height:1.6;text-align:left}
+.role-desc b{color:var(--txt)}
+.team-badge{display:inline-block;padding:4px 14px;border-radius:20px;font-size:.8rem;font-weight:700;margin-bottom:12px}
+.team-werewolf{background:rgba(240,78,78,.15);color:var(--red)}
+.team-village{background:rgba(46,204,113,.15);color:var(--green)}
+.team-neutral{background:rgba(245,200,66,.15);color:var(--gold)}
+.role-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--line)}
+.role-row:last-child{border:none}
+.counter{display:flex;align-items:center;gap:10px}
+.counter button{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--txt);font-size:1.1rem;cursor:pointer}
+.counter span{width:24px;text-align:center;font-weight:700}
+.tally{text-align:center;margin-top:12px;font-size:.85rem;color:var(--dim)}
+.tally b{color:var(--gold)}
+.reveal-btn{width:100%;padding:18px;border:none;border-radius:var(--radius);font-size:1.1rem;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#1a1f35,#252a45);color:var(--dim);margin-top:16px;transition:.3s}
+.reveal-btn:active{background:linear-gradient(135deg,var(--cyan),#1a8aff);color:#000}
+
+/* === Dark Fantasy Poker Card (63x88mm ratio = 0.716) === */
+.poker-card{
+  width:252px;height:352px;margin:20px auto;position:relative;border-radius:12px;
+  background:linear-gradient(170deg,#1a0a0a 0%,#0d0505 40%,#1a0808 100%);
+  border:3px solid #8b6914;
+  box-shadow:0 0 0 1px #4a3508,0 20px 50px rgba(0,0,0,.8),
+    inset 0 0 30px rgba(139,105,20,.15),inset 0 0 80px rgba(0,0,0,.5);
+  overflow:hidden;display:flex;flex-direction:column;align-items:center;padding:16px 12px;
+}
+.poker-card::before{content:'';position:absolute;inset:6px;border:1px solid rgba(139,105,20,.35);
+  border-radius:8px;pointer-events:none}
+.poker-card::after{content:'';position:absolute;left:0;right:0;top:0;bottom:0;
+  background:linear-gradient(180deg,transparent 30%,rgba(80,10,10,.15) 60%,rgba(139,20,20,.1));
+  pointer-events:none}
+/* Red side strips */
+.poker-card .side-strip{position:absolute;top:12px;bottom:12px;width:18px;
+  background:linear-gradient(180deg,#3a0808,#5a1010,#3a0808);opacity:.7}
+.poker-card .side-strip.left{left:8px;border-radius:4px}
+.poker-card .side-strip.right{right:8px;border-radius:4px}
+/* Icon circle */
+.poker-icon{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:2.4rem;margin:12px 0 8px;position:relative;z-index:1;
+  background:radial-gradient(circle,rgba(139,105,20,.2),transparent 70%);
+  border:2px solid rgba(139,105,20,.5);box-shadow:0 0 20px rgba(139,105,20,.3)}
+.poker-name{font-size:1.3rem;font-weight:900;color:#e8d5a0;text-shadow:0 0 10px rgba(139,105,20,.5);
+  margin:4px 0 2px;position:relative;z-index:1;letter-spacing:1px}
+.poker-en{font-size:.75rem;color:#8b7740;margin-bottom:10px;position:relative;z-index:1;letter-spacing:1px}
+.poker-desc{flex:1;display:flex;align-items:center;position:relative;z-index:1;
+  background:rgba(0,0,0,.4);border:1px solid rgba(139,105,20,.25);border-radius:8px;
+  padding:10px 12px;margin:0 8px;width:calc(100% - 16px)}
+.poker-desc p{font-size:.78rem;color:#c8b880;line-height:1.5;text-align:center;width:100%}
+.poker-team{position:absolute;bottom:10px;font-size:.65rem;color:#6b5b30;letter-spacing:1px;
+  z-index:1;text-transform:uppercase}
+/* Corner decorations */
+.poker-corner{position:absolute;width:16px;height:16px;z-index:1}
+.poker-corner svg{width:100%;height:100%;fill:rgba(139,105,20,.6)}
+.poker-corner.tl{top:10px;left:10px}.poker-corner.tr{top:10px;right:10px;transform:rotate(90deg)}
+.poker-corner.bl{bottom:10px;left:10px;transform:rotate(-90deg)}.poker-corner.br{bottom:10px;right:10px;transform:rotate(180deg)}
+/* Card back */
+.poker-back{width:252px;height:352px;margin:20px auto;border-radius:12px;
+  background:linear-gradient(170deg,#1a0a0a 0%,#0d0505 40%,#1a0808 100%);
+  border:3px solid #8b6914;box-shadow:0 0 0 1px #4a3508,0 20px 50px rgba(0,0,0,.8);
+  display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.poker-back::before{content:'';position:absolute;inset:6px;border:1px solid rgba(139,105,20,.35);
+  border-radius:8px}
+.poker-back .wolf-silhouette{font-size:4.5rem;opacity:.7;
+  filter:drop-shadow(0 0 20px rgba(139,105,20,.5))}
+</style>
+</head>
+<body>
+<div class="container" id="app"></div>
+<script>
+const ROLES=[
+{
+"en": "Villager",
+"th": "ชาวบ้าน",
+"emoji": "🧑🌾",
+"team": "village",
+"pts": 1,
+"desc": "ไล่ล่าหามนุษย์หมาป่าให้เจอและกำจัดทิ้ง<br><b>แต้มสมดุล: +1</b>"
+},
+{
+"en": "Seer",
+"th": "เทพพยากรณ์",
+"emoji": "🔮",
+"team": "village",
+"pts": 7,
+"desc": "ในแต่ละคืน เลือกตรวจสอบผู้เล่นหนึ่งคนว่าเป็นมนุษย์หมาป่าหรือไม่<br><b>แต้มสมดุล: +7</b>"
+},
+{
+"en": "Spellcaster",
+"th": "จอมเวท",
+"emoji": "🔇",
+"team": "village",
+"pts": 1,
+"desc": "ในแต่ละคืน เลือกผู้เล่นหนึ่งคนให้ห้ามพูดในวันถัดไป<br><b>แต้มสมดุล: +1</b>"
+},
+{
+"en": "Cupid",
+"th": "กามเทพ",
+"emoji": "💕",
+"team": "village",
+"pts": -3,
+"desc": "ในคืนแรก เลือกผู้เล่นสองคนให้เป็นคู่กัน หากคนใดคนหนึ่งถูกกำจัด อีกคนจะถูกกำจัดไปด้วย<br><b>แต้มสมดุล: -3</b>"
+},
+{
+"en": "Bodyguard",
+"th": "บอดี้การ์ด",
+"emoji": "🛡️",
+"team": "village",
+"pts": 3,
+"desc": "ในแต่ละคืน เลือกผู้เล่นหนึ่งคน ผู้เล่นคนนั้นจะไม่ถูกกำจัดในคืนนั้น<br><i>※ เลือกตัวเองไม่ได้ และห้ามปกป้องคนเดิมซ้ำ 2 คืนติด</i><br><b>แต้มสมดุล: +3</b>"
+},
+{
+"en": "Aura Seer",
+"th": "ญาณทิพย์",
+"emoji": "👁️",
+"team": "village",
+"pts": 3,
+"desc": "ในแต่ละคืน ตรวจสอบผู้เล่นหนึ่งคนว่าเป็นตัวละครพิเศษหรือไม่<br><b>แต้มสมดุล: +3</b>"
+},
+{
+"en": "Drunk",
+"th": "ขี้เมา",
+"emoji": "🍺",
+"team": "village",
+"pts": 4,
+"desc": "เป็นชาวบ้านธรรมดาจนหลังคืนที่ 3 จะสร่างเมาและรู้ว่าจริงๆ เป็นใคร<br><i>※ Moderator สุ่มบทบาทมาให้</i><br><b>แต้มสมดุล: +4</b>"
+},
+{
+"en": "Prince",
+"th": "เจ้าชาย",
+"emoji": "👑",
+"team": "village",
+"pts": 3,
+"desc": "เมื่อถูกโหวตกำจัดกลางวัน ให้เผยบทบาทและไม่ถูกกำจัด<br><i>※ ถ้าถูกหมาป่าฆ่าจะตายอยู่ดี</i><br><b>แต้มสมดุล: +3</b>"
+},
+{
+"en": "Priest",
+"th": "นักบวช",
+"emoji": "⛪",
+"team": "village",
+"pts": 3,
+"desc": "ตอนกลางคืน เลือกผู้เล่นหนึ่งคนให้รอดพ้นการกำจัดได้หนึ่งครั้ง<br><i>※ หนึ่งครั้งต่อเกม</i><br><b>แต้มสมดุล: +3</b>"
+},
+{
+"en": "P.I.",
+"th": "นักสืบเรื่องลี้ลับ",
+"emoji": "🕵️",
+"team": "village",
+"pts": 3,
+"desc": "เลือกผู้เล่นหนึ่งคน ตรวจว่าเขาและคนซ้าย-ขว ามีหมาป่าปะปนไหม<br><i>※ หนึ่งครั้งต่อเกม</i><br><b>แต้มสมดุล: +3</b>"
+},
+{
+"en": "Troublemaker",
+"th": "ตัวป่วน",
+"emoji": "😈",
+"team": "village",
+"pts": -3,
+"desc": "ป่วนให้มีการโหวตกำจัดสองคนในวันรุ่งขึ้น<br><i>※ หนึ่งครั้งต่อเกม</i><br><b>แต้มสมดุล: -3</b>"
+},
+{
+"en": "Witch",
+"th": "แม่มด",
+"emoji": "🧪",
+"team": "village",
+"pts": 4,
+"desc": "ปกป้องหรือกำจัดผู้เล่นได้อย่างละหนึ่งครั้งต่อเกม<br><i>※ ชุบคนที่ตายในคืนนั้น</i><br><b>แต้มสมดุล: +4</b>"
+},
+{
+"en": "Old Hag",
+"th": "แม่หมอ",
+"emoji": "🧓",
+"team": "village",
+"pts": 1,
+"desc": "เลือกสาปผู้เล่นหนึ่งคนให้ออกจากหมู่บ้านหนึ่งวัน<br><i>※ คนที่ถูกไล่โหวตไม่ได้ และไม่ตกเป็นเป้าฆ่าเช้าวันนั้น</i><br><b>แต้มสมดุล: +1</b>"
+},
+{
+"en": "Apprentice Seer",
+"th": "ศิษย์เทพพยากรณ์",
+"emoji": "📖",
+"team": "village",
+"pts": 4,
+"desc": "หากเทพพยากรณ์ถูกกำจัด คุณจะกลายเป็นเทพพยากรณ์<br><i>※ ตรวจหาหมาป่าทุกคืน</i><br><b>แต้มสมดุล: +4</b>"
+},
+{
+"en": "Mayor",
+"th": "นายกเทศมนตรี",
+"emoji": "🏛️",
+"team": "village",
+"pts": 2,
+"desc": "เสียงโหวตของคุณนับเป็น 2 เสียง<br><b>แต้มสมดุล: +2</b>"
+},
+{
+"en": "Hunter",
+"th": "นายพราน",
+"emoji": "🏹",
+"team": "village",
+"pts": 3,
+"desc": "ถ้าถูกกำจัด เลือกกำจัดผู้เล่นอีกคนได้ทันที<br><b>แต้มสมดุล: +3</b>"
+},
+{
+"en": "Disease",
+"th": "ผู้ป่วยติดเชื้อ",
+"emoji": "🤒",
+"team": "village",
+"pts": 3,
+"desc": "หากถูกหมาป่ากำจัด หมาป่าจะไม่ได้เลือกกำจัดในคืนถัดไป<br><b>แต้มสมดุล: +3</b>"
+},
+{
+"en": "Pacifist",
+"th": "ผู้รักสันติ",
+"emoji": "☮️",
+"team": "village",
+"pts": -1,
+"desc": "ต้องโหวตให้ผู้เล่นรอดเสมอ<br><b>แต้มสมดุล: -1</b>"
+},
+{
+"en": "Ghost",
+"th": "พรายกระซิบ",
+"emoji": "👻",
+"team": "village",
+"pts": 2,
+"desc": "ถูกกำจัดตั้งแต่คืนแรก สื่อสารได้วันละหนึ่งตัวอักษร<br><b>แต้มสมดุล: +2</b>"
+},
+{
+"en": "Mason",
+"th": "ภราดรแห่งเมสัน",
+"emoji": "🤝",
+"team": "village",
+"pts": 2,
+"desc": "คืนแรกลืมตามองหาเมสันด้วยกัน<br><i>※ ต้องมีเมสันอย่างน้อย 2 คน</i><br><b>แต้มสมดุล: +2</b>"
+},
+{
+"en": "Doppelganger",
+"th": "ภูตจำแลง",
+"emoji": "🎭",
+"team": "village",
+"pts": -2,
+"desc": "คืนแรกเลือกผู้เล่นหนึ่งคน เมื่อเขาตาย คุณสวมรอยบทบาทนั้นทันที<br><b>แต้มสมดุล: -2</b>"
+},
+{
+"en": "Lycan",
+"th": "ลูกครึ่งมนุษย์หมาป่า",
+"emoji": "🌕",
+"team": "village",
+"pts": -1,
+"desc": "อยู่ฝ่ายชาวบ้าน แต่เทพพยากรณ์จะเห็นเป็นหมาป่า<br><b>แต้มสมดุล: -1</b>"
+},
+{
+"en": "Tough Guy",
+"th": "หนุ่มถึก",
+"emoji": "💪",
+"team": "village",
+"pts": 3,
+"desc": "หากถูกหมาป่ากำจัด จะรอดจนถึงคืนถัดไป<br><i>※ โหวตได้ แล้วตายคืนถัดไป</i><br><b>แต้มสมดุล: +3</b>"
+},
+{
+"en": "Villager Idiot",
+"th": "ไอ้ทึ่ม",
+"emoji": "🤪",
+"team": "village",
+"pts": 2,
+"desc": "ต้องโหวตให้ผู้เล่นถูกกำจัดเสมอ<br><b>แต้มสมดุล: +2</b>"
+},
+{
+"en": "Werewolf",
+"th": "มนุษย์หมาป่า",
+"emoji": "🐺",
+"team": "werewolf",
+"pts": -6,
+"desc": "ทุกคืนตื่นมาพร้อมหมาป่าตัวอื่น เลือกกำจัดผู้เล่นหนึ่งคน<br><b>แต้มสมดุล: -6</b>"
+},
+{
+"en": "Lone Wolf",
+"th": "มนุษย์หมาป่าเดียวดาย",
+"emoji": "🐺",
+"team": "werewolf",
+"pts": -5,
+"desc": "ตื่นพร้อมหมาป่าอื่น แต่ชนะเมื่อรอดเป็นคนสุดท้ายเท่านั้น<br><b>แต้มสมดุล: -5</b>"
+},
+{
+"en": "Wolf Cub",
+"th": "ลูกมนุษย์หมาป่า",
+"emoji": "🐺",
+"team": "werewolf",
+"pts": -8,
+"desc": "ถ้าถูกกำจัด ฝ่ายหมาป่าจะได้กำจัด 2 คนในคืนถัดไป<br><b>แต้มสมดุล: -8</b>"
+},
+{
+"en": "Minion",
+"th": "สมุนรับใช้",
+"emoji": "👤",
+"team": "werewolf",
+"pts": -6,
+"desc": "รู้ว่าใครเป็นหมาป่า แต่ไม่ได้ตื่นกลางคืน<br><i>※ ลืมตาเฉพาะคืนแรก</i><br><b>แต้มสมดุล: -6</b>"
+},
+{
+"en": "Sorcerer",
+"th": "นางปีศาจ",
+"emoji": "🧙",
+"team": "werewolf",
+"pts": -3,
+"desc": "แต่ละคืนตรวจว่าผู้เล่นเป็นเทพพยากรณ์ไหม อยู่ฝ่ายหมาป่า<br><b>แต้มสมดุล: -3</b>"
+},
+{
+"en": "Hoodlum",
+"th": "อันธพาล",
+"emoji": "🔪",
+"team": "werewolf",
+"pts": 0,
+"desc": "คืนแรกเลือก 2 คน ชนะเมื่อคุณรอดจนจบและ 2 คนนั้นถูกกำจัด<br><b>แต้มสมดุล: 0</b>"
+},
+{
+"en": "Cursed",
+"th": "ผู้ต้องคำสาป",
+"emoji": "💀",
+"team": "werewolf",
+"pts": -3,
+"desc": "เริ่มฝ่ายชาวบ้าน เมื่อหมาป่าเลือกกำจัด จะไม่ตายแต่กลายเป็นหมาป่า<br><b>แต้มสมดุล: -3</b>"
+},
+{
+"en": "Tanner",
+"th": "ยาจก",
+"emoji": "🃏",
+"team": "neutral",
+"pts": -2,
+"desc": "หมดอาลัยกับชีวิต ชนะทันทีหากถูกกำจัด<br><b>แต้มสมดุล: -2</b>"
+},
+{
+"en": "Vampire",
+"th": "แวมไพร์",
+"emoji": "🧛",
+"team": "neutral",
+"pts": -7,
+"desc": "เลือกผู้เล่นหนึ่งคน เขาจะถูกกำจัดเมื่อเริ่มโหวตวันถัดไป<br><i>※ หมาป่าฆ่าไม่ได้ แต่โดนโหวตฆ่าได้</i><br><b>แต้มสมดุล: -7</b>"
+},
+{
+"en": "Cult Leader",
+"th": "เจ้าลัทธิ",
+"emoji": "🕯️",
+"team": "neutral",
+"pts": 1,
+"desc": "แต่ละคืนเลือกผู้เล่นเข้าลัทธิ ชนะเมื่อทุกคนอยู่ในลัทธิ<br><b>แต้มสมดุล: +1</b>"
+},
+{
+"en": "Revealer",
+"th": "ผู้เผยตัวตน",
+"emoji": "👆",
+"team": "village",
+"pts": 4,
+"desc": "ชี้ผู้เล่นหนึ่งคน ถ้าเป็นหมาป่าจะถูกกำจัดทันที ถ้าไม่ใช่คุณตายแทน<br><i>※ ชี้ถูกจะชี้ต่อได้</i><br><b>แต้มสมดุล: +4</b>"
+},
+{
+"en": "Mentalist",
+"th": "นักสะกดจิต",
+"emoji": "🧠",
+"team": "village",
+"pts": 6,
+"desc": "ชี้ผู้เล่นสองคนเพื่อตรวจว่าอยู่ฝ่ายเดียวกันไหม<br><b>แต้มสมดุล: +6</b>"
+},
+{
+"en": "Huntress",
+"th": "พรานหญิง",
+"emoji": "🏹",
+"team": "village",
+"pts": 3,
+"desc": "กำจัดผู้เล่นได้หนึ่งคนตอนกลางคืน<br><i>※ ใช้ได้ครั้งเดียว</i><br><b>แต้มสมดุล: +3</b>"
+},
+{
+"en": "Mad Bomber",
+"th": "มือระเบิดพลีชีพ",
+"emoji": "💣",
+"team": "village",
+"pts": -2,
+"desc": "หากถูกกำจัด คนซ้าย-ขวาจะถูกกำจัดไปด้วย<br><b>แต้มสมดุล: -2</b>"
+},
+{
+"en": "Mystic Seer",
+"th": "เทพผู้รู้แจ้ง",
+"emoji": "🌀",
+"team": "village",
+"pts": 9,
+"desc": "แต่ละคืนชี้ผู้เล่นหนึ่งคนเพื่อตรวจว่าเป็นบทบาทใด<br><b>แต้มสมดุล: +9</b>"
+},
+{
+"en": "Alpha Wolf",
+"th": "มนุษย์หมาป่าจ่าฝูง",
+"emoji": "🐺",
+"team": "village",
+"pts": -9,
+"desc": "หลังหมาป่าถูกกำจัดกลางวัน เปลี่ยนเป้าที่หมาป่าเลือกให้เป็นหมาป่าใหม่ได้<br><i>※ ใช้ได้ครั้งเดียว</i><br><b>แต้มสมดุล: -9</b>"
+}
+];
+const TEAM_LABEL={werewolf:'🐺 ฝ่ายหมาป่า',village:'🏡 ฝ่ายมนุษย์',neutral:'🃏 ฝ่ายอิสระ/พิเศษ'};
+let state={view:'home',code:null,name:null,isHost:false,ws:null};
+function $(id){return document.getElementById(id)}
+function esc(s){return(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+function connectWS(){
+  const proto=location.protocol==='https:'?'wss':'ws';
+  const url=proto+'://'+location.host+'?code='+state.code+'&name='+encodeURIComponent(state.name)+(state.isHost?'&host=1':'');
+  const ws=new WebSocket(url);
+  ws.onmessage=(e)=>{
+    const msg=JSON.parse(e.data);
+    if(msg.type==='playerJoined')renderHostLobby(msg.players);
+    if(msg.type==='cardDealt')showCard(msg.role);
+    if(msg.type==='dealt'&&state.isHost)renderHostDealt(msg.assignments);
+    if(msg.type==='reset'){state.view='lobby';render();}
+  };
+  ws.onclose=()=>{setTimeout(connectWS,2000);};
+  state.ws=ws;
+}
+
+function render(){
+  if(state.view==='home')return renderHome();
+  if(state.view==='host-setup')return renderHostSetup();
+  if(state.view==='host-lobby')return fetchAndRenderHostLobby();
+  if(state.view==='player-lobby')return renderPlayerLobby();
+}
+
+function renderHome(){
+  $('app').innerHTML='<div class="card" style="text-align:center">'+
+    '<h1>🐺 Werewolf Cards</h1>'+
+    '<p class="sub">แจกการ์ดบทบาทลับ — ดูได้แค่ในมือตัวเอง</p>'+
+    '<button class="btn btn-primary" onclick="goCreate()">👑 สร้างห้อง (GM)</button>'+
+    '<button class="btn btn-ghost" onclick="goJoin()">📱 เข้าร่วมห้อง</button></div>';
+}
+
+function goCreate(){
+  $('app').innerHTML='<div class="card"><h2>👑 สร้างห้อง</h2>'+
+    '<input id="hostName" placeholder="ชื่อของคุณ (ผู้ดำเนินเกม)" autocomplete="off">'+
+    '<input id="roomSecret" placeholder="ตั้งรหัสผ่านห้อง" type="text" autocomplete="off">'+
+    '<button class="btn btn-primary" onclick="createRoom()">สร้างห้อง</button>'+
+    '<button class="btn btn-ghost" onclick="state.view=\'home\';render()">← กลับ</button></div>';
+}
+
+async function createRoom(){
+  const hostName=$('hostName').value.trim();
+  const sec=$('roomSecret').value.trim();
+  if(!hostName||!sec)return alert('กรอกข้อมูลให้ครบ');
+  const res=await fetch('/api/create',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({hostName:hostName,password:sec})});
+  const data=await res.json();
+  if(data.error)return alert(data.error);
+  state.code=data.code;state.name=hostName;state.isHost=true;state.view='host-setup';
+  connectWS();render();
+}
+
+function goJoin(){
+  $('app').innerHTML='<div class="card"><h2>📱 เข้าร่วมห้อง</h2>'+
+    '<input id="joinCode" placeholder="รหัสห้อง (4 หลัก)" maxlength="4" inputmode="numeric">'+
+    '<input id="joinSecret" placeholder="รหัสผ่าน" type="text">'+
+    '<input id="joinName" placeholder="ชื่อของคุณ" autocomplete="off">'+
+    '<button class="btn btn-primary" onclick="joinRoom()">เข้าร่วม</button>'+
+    '<button class="btn btn-ghost" onclick="state.view=\'home\';render()">← กลับ</button></div>';
+}
+
+async function joinRoom(){
+  const code=$('joinCode').value.trim();
+  const sec=$('joinSecret').value.trim();
+  const playerName=$('joinName').value.trim();
+  if(!code||!sec||!playerName)return alert('กรอกข้อมูลให้ครบ');
+  const res=await fetch('/api/join',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:code,playerName:playerName,password:sec})});
+  const data=await res.json();
+  if(data.error)return alert(data.error);
+  state.code=code;state.name=playerName;state.isHost=false;state.view='player-lobby';
+  connectWS();render();
+}
+
+let rolePicks={};
+function renderHostSetup(){
+  $('app').innerHTML='<div class="card"><h2>👑 ห้องของคุณ</h2>'+
+    '<div class="room-code">'+state.code+'</div>'+
+    '<p class="sub">บอกรหัสนี้ + รหัสผ่าน ให้ผู้เล่นเข้าร่วม</p>'+
+    '<div id="playerList" class="player-list"></div>'+
+    '<p class="tally" id="playerCount"></p></div>'+
+    '<div class="card"><h2>🎭 เลือกบทบาท</h2>'+
+    '<button class="btn btn-ghost" onclick="autoPickRoles()" style="margin-bottom:12px">🎲 สุ่มอัตโนมัติ (กระจายบทบาท)</button>'+
+    '<div id="roleRows">'+ROLES.map(r=>'<div class="role-row"><span>'+r.emoji+' '+r.th+'</span>'+
+      '<div class="counter"><button onclick="adjRole(\''+r.en+'\',-1)">−</button>'+
+      '<span id="rc-'+r.en.replace(/\s/g,'_')+'">'+(rolePicks[r.en]||0)+'</span>'+
+      '<button onclick="adjRole(\''+r.en+'\',1)">+</button></div></div>').join('')+
+    '</div><p class="tally" id="tally"></p>'+
+    '<button class="btn btn-gold" onclick="dealCards()">🎴 สุ่มแจกการ์ด!</button>'+
+    '<button class="btn btn-ghost" onclick="showRoleRef()" style="margin-top:8px">📖 ดูหน้าที่ทุกบทบาท</button></div>';
+  fetchPlayers();updateTally();
+}
+
+function adjRole(en,d){
+  rolePicks[en]=Math.max(0,(rolePicks[en]||0)+d);
+  const el=$('rc-'+en.replace(/\s/g,'_'));if(el)el.textContent=rolePicks[en];
+  updateTally();
+}
+function updateTally(){
+  let total=0;for(const k in rolePicks)total+=rolePicks[k];
+  const el=$('tally');if(el)el.innerHTML='การ์ดทั้งหมด: <b>'+total+'</b> ใบ';
+}
+async function fetchPlayers(){
+  const res=await fetch('/api/room/'+state.code);
+  const data=await res.json();
+  renderHostLobby(data.players);
+}
+function renderHostLobby(players){
+  const el=$('playerList');if(!el)return;
+  el.innerHTML=players.map(n=>'<span class="pill">'+esc(n)+' <span onclick="kickPlayer(\''+esc(n).replace(/'/g,"\\'")+'\')" style="cursor:pointer;opacity:.6;margin-left:4px">✕</span></span>').join('');
+  const pc=$('playerCount');if(pc)pc.innerHTML='ผู้เล่น: <b>'+players.length+'</b> คน';
+}
+async function kickPlayer(name){
+  if(!confirm('ลบ '+name+' ออกจากห้อง?'))return;
+  await fetch('/api/kick',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:state.code,playerName:name})});
+  fetchPlayers();
+}
+
+async function dealCards(){
+  const roles=[];
+  for(const k in rolePicks){if(rolePicks[k]>0)roles.push({name:k,count:rolePicks[k]});}
+  await fetch('/api/roles',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:state.code,roles:roles})});
+  const res=await fetch('/api/deal',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:state.code})});
+  const data=await res.json();
+  if(data.error)return alert(data.error);
+}
+function renderHostDealt(assignments){
+  let list='';
+  if(assignments&&assignments.length){
+    list=assignments.map(a=>{
+      const r=ROLES.find(x=>x.en===a.role);
+      const emoji=r?r.emoji:'❓';const th=r?r.th:a.role;const team=r?r.team:'village';
+      return '<div style="display:flex;align-items:center;gap:10px;padding:8px;border-bottom:1px solid var(--line)">'+
+        '<span style="font-size:1.3rem">'+emoji+'</span>'+
+        '<span style="flex:1;font-weight:700">'+esc(a.name)+'</span>'+
+        '<span class="team-badge team-'+team+'">'+esc(th)+'</span></div>';
+    }).join('');
+  }
+  $('app').innerHTML='<div class="card"><h2>✅ แจกการ์ดแล้ว!</h2>'+
+    '<p class="sub">ผู้เล่นทุกคนเห็นการ์ดในมือของตัวเองแล้ว — คุณเห็นทุกคน</p></div>'+
+    '<div class="card"><h2>👁️ ผลการแจกบทบาท (เฉพาะ GM เห็น)</h2>'+list+'</div>'+
+    '<div class="card" style="text-align:center">'+
+    '<button class="btn btn-primary" onclick="resetRoom()">🔄 เล่นรอบใหม่ (ห้องเดิม)</button>'+
+    '<button class="btn btn-ghost" onclick="state.view=\'host-setup\';render()">← กลับหน้าตั้งค่า</button></div>';
+}
+async function resetRoom(){
+  await fetch('/api/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:state.code})});
+  state.view='host-setup';render();
+}
+
+function renderPlayerLobby(){
+  $('app').innerHTML='<div class="card" style="text-align:center"><h2>📱 เข้าห้องแล้ว!</h2>'+
+    '<div class="room-code">'+state.code+'</div>'+
+    '<p class="sub">รอ GM แจกการ์ด...</p>'+
+    '<p style="font-size:3rem;margin:20px 0">⏳</p>'+
+    '<p style="color:var(--dim)">ชื่อ: <b>'+esc(state.name)+'</b></p></div>';
+}
+
+function showCard(roleName){
+  const role=ROLES.find(r=>r.en===roleName)||{en:roleName,th:roleName,emoji:'\u2753',team:'village',desc:'\u0e1a\u0e17\u0e1a\u0e32\u0e17\u0e01\u0e33\u0e2b\u0e19\u0e14\u0e40\u0e2d\u0e07',pts:0};
+  state.view='card';
+  const corner='<svg viewBox="0 0 16 16"><path d="M0 0L16 0L16 3L3 3L3 16L0 16Z"/></svg>';
+  const shortDesc=role.desc.split('<br>')[0]; // just first line
+  $('app').innerHTML=
+    '<div class="poker-card">'+
+      '<div class="side-strip left"></div><div class="side-strip right"></div>'+
+      '<div class="poker-corner tl">'+corner+'</div>'+
+      '<div class="poker-corner tr">'+corner+'</div>'+
+      '<div class="poker-corner bl">'+corner+'</div>'+
+      '<div class="poker-corner br">'+corner+'</div>'+
+      '<div class="poker-icon">'+role.emoji+'</div>'+
+      '<div class="poker-name">'+esc(role.th)+'</div>'+
+      '<div class="poker-en">'+esc(role.en)+'</div>'+
+      '<div class="poker-desc"><p>'+shortDesc+'</p></div>'+
+      '<div class="poker-team">'+(role.team==='werewolf'?'\u{1F43A} \u0e2b\u0e21\u0e32\u0e1b\u0e48\u0e32':role.team==='neutral'?'\u2728 \u0e2d\u0e34\u0e2a\u0e23\u0e30':'\u{1F3E1} \u0e21\u0e19\u0e38\u0e29\u0e22\u0e4c')+'</div>'+
+    '</div>';
+}
+
+function showRoleRef(){
+  const teams={werewolf:'🐺 ฝ่ายหมาป่า',village:'🏡 ฝ่ายมนุษย์',neutral:'🃏 ฝ่ายอิสระ/พิเศษ'};
+  let html='<div class="card"><h2>📖 หน้าที่ทุกบทบาท</h2>'+
+    '<button class="btn btn-ghost" onclick="renderHostSetup()" style="margin-bottom:12px">← กลับ</button>';
+  for(const team of ['village','werewolf','neutral']){
+    const list=ROLES.filter(r=>r.team===team);
+    if(!list.length)continue;
+    html+='<h3 style="margin-top:16px">'+teams[team]+' ('+list.length+')</h3>';
+    html+='<table style="width:100%;border-collapse:collapse;font-size:.8rem;margin-top:8px">';
+    html+='<tr style="border-bottom:1px solid var(--line);color:var(--dim)"><th style="text-align:left;padding:6px">บทบาท</th><th style="text-align:left;padding:6px">หน้าที่</th><th style="padding:6px">แต้ม</th></tr>';
+    list.forEach(r=>{
+      const desc=r.desc.split('<br>')[0].replace(/<[^>]*>/g,'');
+      const ptsColor=r.pts>0?'var(--green)':r.pts<0?'var(--red)':'var(--dim)';
+      html+='<tr style="border-bottom:1px solid rgba(255,255,255,.05)">'+
+        '<td style="padding:6px;white-space:nowrap"><b>'+r.emoji+' '+esc(r.th)+'</b><br><span style="color:var(--dim)">'+esc(r.en)+'</span></td>'+
+        '<td style="padding:6px;color:var(--dim)">'+desc+'</td>'+
+        '<td style="padding:6px;text-align:center;font-weight:700;color:'+ptsColor+'">'+(r.pts>0?'+':'')+r.pts+'</td></tr>';
+    });
+    html+='</table>';
+  }
+  html+='</div>';
+  $('app').innerHTML=html;
+}
+
+function autoPickRoles(){
+  // get player count
+  const playerEls=$('playerCount');
+  let count=0;
+  if(playerEls){const m=playerEls.textContent.match(/\d+/);if(m)count=parseInt(m[0]);}
+  if(!count){alert('ยังไม่มีผู้เล่นเข้าห้อง');return;}
+  // Reset all
+  rolePicks={};
+  // Pick diverse roles - wolves first
+  const wolves=Math.max(1,Math.floor(count/4)); // ~25% wolves
+  const villageSlots=count-wolves;
+  // Pick wolf roles (unique)
+  const wolfRoles=ROLES.filter(r=>r.team==='werewolf');
+  const neutralRoles=ROLES.filter(r=>r.team==='neutral');
+  const villageRoles=ROLES.filter(r=>r.team==='village'&&r.en!=='Villager');
+  // Shuffle helper
+  function shuffle(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+  // Pick unique wolves
+  const pickedWolves=shuffle(wolfRoles).slice(0,wolves);
+  pickedWolves.forEach(r=>{rolePicks[r.en]=1;});
+  // Pick unique special villagers
+  let remaining=villageSlots;
+  // Maybe 1 neutral if enough players
+  if(count>=8&&neutralRoles.length){
+    const nr=shuffle(neutralRoles)[0];
+    rolePicks[nr.en]=1;remaining--;
+  }
+  // Fill special village roles (unique, no repeat)
+  const specials=shuffle(villageRoles).slice(0,Math.min(remaining-1,villageRoles.length));
+  specials.forEach(r=>{rolePicks[r.en]=1;remaining--;});
+  // Fill rest with plain villagers
+  if(remaining>0)rolePicks['Villager']=(rolePicks['Villager']||0)+remaining;
+  // Re-render
+  renderHostSetup();
+}
+
+render();
+</script>
+</body>
+</html>
